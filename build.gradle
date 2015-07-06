@@ -1,0 +1,43 @@
+apply plugin: 'java'
+
+buildscript {
+  repositories {
+    jcenter()
+  }
+  dependencies {
+    classpath 'com.android.tools.build:gradle:1.1.1'
+  }
+}
+
+repositories {
+  jcenter()
+}
+
+dependencies {
+  compile 'com.android.tools.lint:lint-api:24.1.3'
+  compile 'com.android.tools.lint:lint-checks:24.1.3'
+  compile 'com.android.tools.lint:lint:24.1.3'
+}
+
+jar {
+  baseName 'com.getbase.lint'
+  version '1.0'
+
+  manifest {
+    attributes 'Manifest-Version': 1.0
+    attributes 'Lint-Registry': 'com.getbase.lint.CustomIssueRegistry'
+  }
+}
+
+configurations {
+  lintChecks
+}
+
+dependencies {
+  lintChecks files(jar)
+}
+
+task install(type: Copy) {
+  from configurations.lintChecks
+  into System.getProperty("user.home") + '/.android/lint/'
+}
