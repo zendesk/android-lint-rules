@@ -13,7 +13,7 @@ public class CustomIssueRegistry extends IssueRegistry {
   public List<Issue> getIssues() {
     return Arrays.asList(
         AncientMinSdkDetector.ISSUE,
-        MicroOrmDetector.NO_DEFAULT_CONSTRUCTOR_ISSUE
+        MicroOrmDetector.NO_PUBLIC_DEFAULT_CONSTRUCTOR_ISSUE
     );
   }
 }

@@ -22,10 +22,10 @@ import java.util.List;
 
 public class MicroOrmDetector extends Detector implements ClassScanner {
 
-  public static final Issue NO_DEFAULT_CONSTRUCTOR_ISSUE = Issue.create(
+  public static final Issue NO_PUBLIC_DEFAULT_CONSTRUCTOR_ISSUE = Issue.create(
       "MicroOrmDefaultConstructor",
-      "MicroOrm annotated class without default constructor",
-      "`MicroOrm.fromCursor()` and `MicroOrm.getFunctionFor()` needs a default constructor.",
+      "MicroOrm annotated class without public default constructor",
+      "`MicroOrm.fromCursor()` and `MicroOrm.getFunctionFor()` needs a public default constructor.",
       Category.CORRECTNESS,
       7,
       Severity.WARNING,
@@ -38,10 +38,10 @@ public class MicroOrmDetector extends Detector implements ClassScanner {
     if (!isInstantiable(classNode) && isAnnotatedByMicroOrm(classNode)) {
 
       context.report(
-          NO_DEFAULT_CONSTRUCTOR_ISSUE,
+          NO_PUBLIC_DEFAULT_CONSTRUCTOR_ISSUE,
           context.getLocation(classNode),
           String.format(
-              "This class should provide a default constructor (a constructor with no arguments) (%1$s)",
+              "This class should provide a public default constructor (a constructor with no arguments) (%1$s)",
               ClassContext.createSignature(classNode.name, null, null)
           )
       );
@@ -82,7 +82,7 @@ public class MicroOrmDetector extends Detector implements ClassScanner {
       MethodNode method = (MethodNode) m;
       if (method.name.equals(CONSTRUCTOR_NAME)) {
         if (method.desc.equals("()V")) {
-          return true;
+          return (method.access & Opcodes.ACC_PUBLIC) != 0;
         }
       }
     }
