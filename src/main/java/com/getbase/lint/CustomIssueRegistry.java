@@ -3,6 +3,7 @@ package com.getbase.lint;
 import com.android.tools.lint.client.api.IssueRegistry;
 import com.android.tools.lint.detector.api.Issue;
 import com.getbase.lint.issues.AncientMinSdkDetector;
+import com.getbase.lint.issues.EnumDetector;
 import com.getbase.lint.issues.MicroOrmDetector;
 
 import java.util.Arrays;
@@ -13,7 +14,8 @@ public class CustomIssueRegistry extends IssueRegistry {
   public List<Issue> getIssues() {
     return Arrays.asList(
         AncientMinSdkDetector.ISSUE,
-        MicroOrmDetector.NO_PUBLIC_DEFAULT_CONSTRUCTOR_ISSUE
+        MicroOrmDetector.NO_PUBLIC_DEFAULT_CONSTRUCTOR_ISSUE,
+        EnumDetector.ENUMS_ARE_BAD_ISSUE
     );
   }
 }
