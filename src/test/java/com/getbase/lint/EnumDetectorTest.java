@@ -22,6 +22,10 @@ public class EnumDetectorTest extends BaseLintDetectorTest {
     test("enum");
   }
 
+  public void testCorrectLocation() throws Exception {
+    test("enum_with_javadoc");
+  }
+
   private void test(String resourceDirectory) throws Exception {
     assertEquals(getExpectedError(resourceDirectory + "/expected"), lintFiles(resourceDirectory + "/TheEnum.java"));
   }

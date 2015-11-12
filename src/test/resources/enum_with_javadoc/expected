@@ -1,0 +1,4 @@
+enum_with_javadoc/TheEnum.java:4: Information: Consider using int constants instead of TheEnum [EnumsAreBad]
+public enum TheEnum {
+            ~~~~~~~
+0 errors, 1 warnings

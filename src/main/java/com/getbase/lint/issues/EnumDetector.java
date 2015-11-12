@@ -43,7 +43,7 @@ public class EnumDetector extends Detector implements JavaScanner {
       public boolean visitEnumDeclaration(EnumDeclaration node) {
         context.report(
             ENUMS_ARE_BAD_ISSUE,
-            context.getLocation(node),
+            context.getLocation(node.astName()),
             String.format(
                 "Consider using int constants instead of %1$s",
                 node.astName().astValue()
