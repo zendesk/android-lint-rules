@@ -26,6 +26,10 @@ public class EnumDetectorTest extends BaseLintDetectorTest {
     test("enum_with_javadoc");
   }
 
+  public void testSuppressionSupport() throws Exception {
+    test("enum_with_suppression");
+  }
+
   private void test(String resourceDirectory) throws Exception {
     assertEquals(getExpectedError(resourceDirectory + "/expected"), lintFiles(resourceDirectory + "/TheEnum.java"));
   }
