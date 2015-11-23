@@ -9,6 +9,7 @@ import com.android.tools.lint.detector.api.Detector;
 import com.android.tools.lint.detector.api.Detector.GradleScanner;
 import com.android.tools.lint.detector.api.Implementation;
 import com.android.tools.lint.detector.api.Issue;
+import com.android.tools.lint.detector.api.Location;
 import com.android.tools.lint.detector.api.Scope;
 import com.android.tools.lint.detector.api.Severity;
 import com.getbase.lint.utils.GradleUtils;
@@ -55,15 +56,29 @@ public class InvalidLintIdDetector extends Detector implements GradleScanner {
 
   @Override
   public void visitBuildScript(@NonNull Context context, Map<String, Object> sharedData) {
-    BuildScriptVisitor visitor = new BuildScriptVisitor();
+    ImmutableSet<String> validIssuesIds = getValidIssuesIds(context);
 
-    String buildScriptSource = checkNotNull(context.getContents());
+    for (IssueReference issueReference : extractIssuesReferences(context)) {
+      if (!validIssuesIds.contains(issueReference.getIssueId())) {
+        context.report(
+            ISSUE,
+            issueReference.getLocation(),
+            String.format(
+                "Unknown lint issue id: %1$s",
+                issueReference.getIssueId()
+            )
+        );
+      }
+    }
+  }
 
-    Iterables
-        .getOnlyElement(new AstBuilder().buildFromString(buildScriptSource))
-        .visit(visitor);
+  private static abstract class IssueReference {
+    abstract String getIssueId();
+    abstract Location getLocation();
+  }
 
-    ImmutableSet<String> issueIds = FluentIterable
+  private static ImmutableSet<String> getValidIssuesIds(Context context) {
+    return FluentIterable
         .from(context.getDriver().getRegistry().getIssues())
         .transform(new Function<Issue, String>() {
           @Override
@@ -72,19 +87,35 @@ public class InvalidLintIdDetector extends Detector implements GradleScanner {
           }
         })
         .toSet();
+  }
 
-    for (Expression issueIdExpression : visitor.mIssueIdsExpressions) {
-      if (!issueIds.contains(issueIdExpression.getText())) {
-        context.report(
-            ISSUE,
-            GradleUtils.createLocation(context, issueIdExpression),
-            String.format(
-                "Unknown lint issue id: %1$s",
-                issueIdExpression.getText()
-            )
-        );
-      }
-    }
+  private static Iterable<IssueReference> extractIssuesReferences(final Context context) {
+    BuildScriptVisitor visitor = new BuildScriptVisitor();
+
+    String buildScriptSource = checkNotNull(context.getContents());
+
+    Iterables
+        .getOnlyElement(new AstBuilder().buildFromString(buildScriptSource))
+        .visit(visitor);
+
+    return FluentIterable
+        .from(visitor.mIssueIdsExpressions)
+        .transform(new Function<Expression, IssueReference>() {
+          @Override
+          public IssueReference apply(final Expression expression) {
+            return new IssueReference() {
+              @Override
+              String getIssueId() {
+                return expression.getText();
+              }
+
+              @Override
+              Location getLocation() {
+                return GradleUtils.createLocation(context, expression);
+              }
+            };
+          }
+        });
   }
 
   private static class BuildScriptVisitor extends CodeVisitorSupport {
@@ -96,24 +127,23 @@ public class InvalidLintIdDetector extends Detector implements GradleScanner {
     public void visitMethodCallExpression(MethodCallExpression call) {
       int stackSize = mScopeStack.size();
 
+      System.out.println(call);
+
       call.getObjectExpression().visit(this);
       call.getMethod().visit(this);
 
       if (parseLintIssuesId()) {
         if (call.getArguments() instanceof ArgumentListExpression) {
-          extractConstantExpressions((ArgumentListExpression) call.getArguments()).copyInto(mIssueIdsExpressions);
+          FluentIterable
+              .from(((ArgumentListExpression) call.getArguments()).getExpressions())
+              .filter(Predicates.instanceOf(ConstantExpression.class))
+              .copyInto(mIssueIdsExpressions);
         }
       } else {
         call.getArguments().visit(this);
       }
 
       mScopeStack.setSize(stackSize);
-    }
-
-    private FluentIterable<Expression> extractConstantExpressions(ArgumentListExpression expressions) {
-      return FluentIterable
-          .from(expressions.getExpressions())
-          .filter(Predicates.instanceOf(ConstantExpression.class));
     }
 
     @Override
