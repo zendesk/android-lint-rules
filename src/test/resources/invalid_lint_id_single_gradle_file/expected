@@ -1,0 +1,4 @@
+invalid_lint_id_single_gradle_file/build.gradle:25: Error: Unknown lint issue id: UnusedResource [InvalidLintId]
+    fatal 'UnusedResource'
+          ~~~~~~~~~~~~~~~~
+1 errors, 0 warnings
